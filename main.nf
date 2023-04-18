@@ -25,10 +25,9 @@ nextflow.enable.dsl = 2
 
 // Check manditory input parameters to see if the files exist if they have been specified
 check_param_list = [
-    // samplesheet: params.samplesheet,
-    // fasta: params.fasta,
-    // smrna_fasta: params.smrna_fasta,
-    // gtf: params.gtf
+    bed: params.bed,
+    fasta: params.fasta,
+    fasta_fai: params.fasta_fai
 ]
 for (param in check_param_list) {
     if (!param.value) {
@@ -82,6 +81,9 @@ for (param in check_param_list) { if (param) { file(param, checkIfExists: true) 
 // MODULEs
 //
 
+include { BEDTOOLS_SLOP } from './modules/nf-core/bedtools/slop/main'
+include { BEDTOOLS_GETFASTA } from './modules/nf-core/bedtools/getfasta/main'
+
 //
 // SUBWORKFLOWS
 //
@@ -95,6 +97,20 @@ for (param in check_param_list) { if (param) { file(param, checkIfExists: true) 
 */
 
 workflow TODO {
+
+    ch_bed       = Channel.of([[:],file(params.bed, checkIfExists: true)])
+    ch_fasta     = file(params.fasta, checkIfExists: true)
+    ch_fasta_fai = file(params.fasta_fai, checkIfExists: true)
+
+    BEDTOOLS_SLOP(
+        ch_bed,
+        ch_fasta_fai
+    )
+
+    BEDTOOLS_GETFASTA(
+        BEDTOOLS_SLOP.out.bed.flatten().last(),
+        ch_fasta
+    )
 
 }
 
