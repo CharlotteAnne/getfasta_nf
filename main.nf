@@ -81,6 +81,7 @@ for (param in check_param_list) { if (param) { file(param, checkIfExists: true) 
 // MODULEs
 //
 
+include { SAMTOOLS_FAIDX } from './modules/nf-core/samtools/faidx/main'
 include { BEDTOOLS_SLOP } from './modules/nf-core/bedtools/slop/main'
 include { BEDTOOLS_GETFASTA } from './modules/nf-core/bedtools/getfasta/main'
 
@@ -102,9 +103,13 @@ workflow TODO {
     ch_fasta     = file(params.fasta, checkIfExists: true)
     ch_fasta_fai = file(params.fasta_fai, checkIfExists: true)
 
+    SAMTOOLS_FAIDX(
+        Channel.of([[:],file(params.fasta, checkIfExists: true)])
+    )
+
     BEDTOOLS_SLOP(
         ch_bed,
-        ch_fasta_fai
+        SAMTOOLS_FAIDX.out.fai.flatten().last()
     )
 
     BEDTOOLS_GETFASTA(
